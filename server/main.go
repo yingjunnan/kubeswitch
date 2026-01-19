@@ -53,6 +53,8 @@ func main() {
 
 				admin.POST("/clusters", controllers.CreateCluster)
 				admin.DELETE("/clusters/:id", controllers.DeleteCluster)
+				admin.GET("/clusters/:id/permissions", controllers.GetClusterPermissions)
+				admin.POST("/clusters/:id/permissions", controllers.SetClusterPermissions)
 
 				admin.GET("/audit", controllers.GetAuditLogs)
 			}

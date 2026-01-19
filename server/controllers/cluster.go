@@ -103,3 +103,64 @@ func DeleteCluster(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Cluster deleted"})
 }
+
+type SetClusterPermissionsInput struct {
+	UserIDs []uint `json:"user_ids" binding:"required"`
+}
+
+func SetClusterPermissions(c *gin.Context) {
+	clusterID := c.Param("id")
+	var input SetClusterPermissionsInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var cluster models.Cluster
+	if err := database.DB.First(&cluster, clusterID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Cluster not found"})
+		return
+	}
+
+	// Transaction to update permissions
+	tx := database.DB.Begin()
+	
+	// Remove existing permissions for this cluster
+	if err := tx.Where("cluster_id = ?", cluster.ID).Delete(&models.Permission{}).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear permissions"})
+		return
+	}
+
+	// Add new permissions
+	for _, userID := range input.UserIDs {
+		perm := models.Permission{
+			UserID:    userID,
+			ClusterID: cluster.ID,
+		}
+		if err := tx.Create(&perm).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add permission"})
+			return
+		}
+	}
+
+	tx.Commit()
+	c.JSON(http.StatusOK, gin.H{"message": "Permissions updated"})
+}
+
+func GetClusterPermissions(c *gin.Context) {
+	clusterID := c.Param("id")
+	var perms []models.Permission
+	if err := database.DB.Where("cluster_id = ?", clusterID).Find(&perms).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch permissions"})
+		return
+	}
+	
+	var userIDs []uint
+	for _, p := range perms {
+		userIDs = append(userIDs, p.UserID)
+	}
+	
+	c.JSON(http.StatusOK, gin.H{"user_ids": userIDs})
+}
