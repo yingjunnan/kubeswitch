@@ -40,6 +40,7 @@ func main() {
 		{
 			authorized.POST("/logout", controllers.Logout)
 			authorized.GET("/my/user", controllers.GetCurrentUser)
+			authorized.POST("/my/password", controllers.ChangePassword)
 			authorized.GET("/clusters", controllers.GetClusters)
 			authorized.GET("/clusters/:id/config", controllers.GetClusterConfig)
 
@@ -48,6 +49,9 @@ func main() {
 			{
 				admin.GET("/users", controllers.GetUsers)
 				admin.POST("/users", controllers.CreateUser)
+				admin.DELETE("/users/:id", controllers.DeleteUser)
+				admin.POST("/users/:id/password", controllers.AdminChangePassword)
+				admin.POST("/users/:id/role", controllers.UpdateUserRole)
 				admin.GET("/users/:id/permissions", controllers.GetUserPermissions)
 				admin.POST("/users/:id/permissions", controllers.SetUserPermissions)
 
