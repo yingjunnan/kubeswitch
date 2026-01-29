@@ -74,7 +74,7 @@ const UserList: React.FC = () => {
     {
       title: 'Action',
       key: 'action',
-      render: (_, record: User) => (
+      render: (_: any, record: User) => (
         <Button onClick={() => openPermModal(record)}>Permissions</Button>
       ),
     },

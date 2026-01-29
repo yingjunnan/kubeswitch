@@ -108,6 +108,10 @@ type SetClusterPermissionsInput struct {
 	UserIDs []uint `json:"user_ids" binding:"required"`
 }
 
+type ImportKubeconfigInput struct {
+	Kubeconfig string `json:"kubeconfig" binding:"required"`
+}
+
 func SetClusterPermissions(c *gin.Context) {
 	clusterID := c.Param("id")
 	var input SetClusterPermissionsInput
@@ -163,4 +167,39 @@ func GetClusterPermissions(c *gin.Context) {
 	}
 	
 	c.JSON(http.StatusOK, gin.H{"user_ids": userIDs})
+}
+
+func ImportKubeconfig(c *gin.Context) {
+	clusterID := c.Param("id")
+	userID := c.MustGet("user_id").(uint)
+	role := c.MustGet("role").(string)
+
+	// Only admin can import kubeconfig
+	if role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		return
+	}
+
+	var input ImportKubeconfigInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var cluster models.Cluster
+	if err := database.DB.First(&cluster, clusterID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Cluster not found"})
+		return
+	}
+
+	// Update kubeconfig
+	cluster.Kubeconfig = input.Kubeconfig
+	if err := database.DB.Save(&cluster).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update kubeconfig"})
+		return
+	}
+
+	utils.LogAudit(userID, "ImportKubeconfig", "Imported kubeconfig for "+cluster.Name, c.ClientIP())
+
+	c.JSON(http.StatusOK, gin.H{"message": "Kubeconfig imported successfully"})
 }

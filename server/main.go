@@ -55,6 +55,7 @@ func main() {
 				admin.DELETE("/clusters/:id", controllers.DeleteCluster)
 				admin.GET("/clusters/:id/permissions", controllers.GetClusterPermissions)
 				admin.POST("/clusters/:id/permissions", controllers.SetClusterPermissions)
+				admin.POST("/clusters/:id/import", controllers.ImportKubeconfig)
 
 				admin.GET("/audit", controllers.GetAuditLogs)
 			}

@@ -1,2 +1,5 @@
 .idea/vcs.xml
 server/kubeswitch.db
+.vscode/settings.json
+server/kubeswitch.db
+server/kubeswitch
