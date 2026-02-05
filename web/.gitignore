@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Test coverage
+coverage
+.nyc_output
+
+# Environment variables
+.env.local
+.env.*.local
